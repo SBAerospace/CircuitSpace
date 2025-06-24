@@ -1,0 +1,348 @@
+:root {
+    --bg-dark: #1a1d21;
+    --bg-medium: #2c3038;
+    --bg-light: #22252a; 
+    --text-light: #e1e3e6;
+    --text-dark: #e1e3e6;
+    --border-color: #3a414a;
+    --accent-color: #00aaff;
+    --accent-hover: #0088cc;
+    --valid-color: #28a745;
+    --warning-color: #ffc107;
+    --error-color: #e74c3c;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+header {
+    background-color: var(--bg-dark);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+header button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 9px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    margin-left: 10px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+header button:hover {
+    background-color: var(--accent-hover);
+}
+
+header button:active {
+    transform: scale(0.98);
+}
+
+#app-container {
+    display: flex;
+    flex-grow: 1;
+    height: calc(100vh - 65px);
+}
+
+#component-library, #side-panel {
+    width: 260px;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    z-index: 5;
+}
+
+#component-library {
+    border-right: 1px solid var(--border-color);
+}
+
+#side-panel {
+    width: 300px;
+    border-left: 1px solid var(--border-color);
+}
+
+#component-library h2, #side-panel h2 {
+    margin-top: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.component-item {
+    background-color: var(--bg-medium);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    cursor: grab;
+    text-align: center;
+    font-weight: 500;
+    color: var(--text-light);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.component-item:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-hover);
+}
+
+.component-item:active {
+    cursor: grabbing;
+}
+
+#canvas-container {
+    flex-grow: 1;
+    background-color: var(--bg-light);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px);
+    background-size: 25px 25px;
+    background-position: -10px -10px;
+    position: relative;
+    overflow: hidden;
+}
+
+#drawing-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.draggable-group {
+    cursor: move;
+}
+.component-body {
+    stroke: #999;
+    stroke-width: 1.5;
+    fill: #3e444f;
+    transition: all 0.2s ease;
+}
+.component-body.selected {
+    stroke: var(--accent-color);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 5px rgba(0, 170, 255, 0.5));
+}
+.component-label {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--text-light);
+    pointer-events: none;
+    user-select: none;
+}
+.pin {
+    fill: #888;
+    stroke: #3e444f;
+    stroke-width: 1.5;
+    cursor: crosshair;
+    transition: fill 0.2s ease;
+}
+.pin:hover {
+    fill: var(--accent-color);
+    stroke: white;
+}
+.pin-label {
+    font-size: 9px;
+    font-weight: 500;
+    fill: var(--text-light);
+    pointer-events: none;
+    user-select: none;
+}
+
+.wire {
+    stroke-width: 2.5;
+    fill: none;
+    pointer-events: none;
+}
+.wire.POWER { stroke: var(--error-color); }
+.wire.GROUND { stroke: #e1e3e6; }
+.wire.SIGNAL { stroke: var(--warning-color); }
+.wire.ANY { stroke: #888; }
+.wire.temp {
+    stroke: var(--accent-color);
+    stroke-dasharray: 4 4;
+    stroke-width: 2;
+}
+
+#properties-inspector {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.placeholder-text {
+    color: #888;
+}
+
+.property-item {
+    margin-bottom: 15px;
+}
+.property-item label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 0.85em;
+    color: #aaa;
+}
+.property-item input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-medium);
+    color: var(--text-light);
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.property-item input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.2);
+}
+
+button#delete-component-btn {
+    width: 100%;
+    background-color: var(--error-color);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+button#delete-component-btn:hover {
+    background-color: #c0392b;
+}
+
+#validation-panel {
+    border-top: 1px solid var(--border-color);
+    height: 250px;
+    overflow-y: auto;
+    padding-top: 20px;
+}
+#validation-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+#validation-list li {
+    padding: 8px 5px;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+}
+#validation-list li::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+#validation-list li.valid { color: var(--valid-color); }
+#validation-list li.valid::before { background-color: var(--valid-color); }
+
+#validation-list li.error { color: var(--error-color); }
+#validation-list li.error::before { background-color: var(--error-color); }
+
+#validation-list li.warning { color: var(--warning-color); }
+#validation-list li.warning::before { background-color: var(--warning-color); }
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+}
+.modal-content {
+    background-color: var(--bg-medium);
+    color: var(--text-light);
+    margin: 10% auto;
+    padding: 25px 30px;
+    border: 1px solid var(--border-color);
+    width: 80%;
+    max-width: 600px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.modal-content h2 {
+    margin-top: 0;
+    color: var(--text-light);
+}
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.close-button:hover {
+    color: #fff;
+}
+#bom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+#bom-table th, #bom-table td {
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 8px;
+    text-align: left;
+}
+#bom-table th {
+    background-color: var(--bg-dark);
+    font-weight: 600;
+}
+
+#component-library, #side-panel, #validation-panel {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-medium) var(--bg-dark);
+}
+#component-library::-webkit-scrollbar, #side-panel::-webkit-scrollbar, #validation-panel::-webkit-scrollbar {
+    width: 8px;
+}
+#component-library::-webkit-scrollbar-track, #side-panel::-webkit-scrollbar-track, #validation-panel::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+#component-library::-webkit-scrollbar-thumb, #side-panel::-webkit-scrollbar-thumb, #validation-panel::-webkit-scrollbar-thumb {
+    background-color: var(--bg-medium);
+    border-radius: 4px;
+    border: 2px solid var(--bg-dark);
+}

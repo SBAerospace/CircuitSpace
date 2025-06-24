@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARC E-Bay Circuit Planner</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <h1>ARC E-Bay Circuit Planner</h1>
+        <div class="header-buttons">
+            <button id="export-svg-btn">Export as SVG</button>
+            <button id="generate-bom-btn">Generate List of Components</button>
+        </div>
+    </header>
+
+    <div id="app-container">
+        <div id="component-library">
+            <h2>Component Library</h2>
+            <div id="components-list">
+            </div>
+        </div>
+
+        <div id="canvas-container">
+            <svg id="drawing-canvas"></svg>
+        </div>
+
+        <div id="side-panel">
+            <div id="properties-inspector">
+                <h2>Properties</h2>
+                <div id="inspector-content">
+                    <p class="placeholder-text">Select a component to see its properties.</p>
+                </div>
+            </div>
+            <div id="validation-panel">
+                <h2>System Status</h2>
+                <ul id="validation-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="bom-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Components List</h2>
+            <table id="bom-table">
+                <thead>
+                    <tr>
+                        <th>Component Type</th>
+                        <th>Custom Label</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+\                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
