@@ -357,3 +357,28 @@ button#delete-component-btn:hover {
     border-radius: 4px;
     border: 2px solid var(--bg-dark);
 }
+#zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#zoom-controls button {
+    background-color: var(--bg-medium);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 28px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+#zoom-controls button:hover {
+    background-color: var(--accent-color);
+}

@@ -77,11 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
             active: false,
             sourcePin: null,
             tempLine: null
+        },
+        view: {
+            scale: 1,
+            panX: 0,
+            panY: 0
         }
     };
 
     const componentsList = document.getElementById('components-list');
     const canvas = document.getElementById('drawing-canvas');
+    const canvasContainer = document.getElementById('canvas-container');
     const inspectorContent = document.getElementById('inspector-content');
     const validationList = document.getElementById('validation-list');
     const bomModal = document.getElementById('bom-modal');
@@ -90,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function render() {
         canvas.innerHTML = '';
+
+        const transformGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        transformGroup.setAttribute('transform', `scale(${appState.view.scale}) translate(${appState.view.panX}, ${appState.view.panY})`);
+        canvas.appendChild(transformGroup);
 
         appState.wires.forEach(wire => {
             const sourceComp = findComponent(wire.source.componentId);
@@ -108,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const wireType = sourcePin.type === 'ANY' ? targetPin.type : sourcePin.type;
             line.setAttribute('class', `wire ${wireType}`);
-            canvas.appendChild(line);
+            transformGroup.appendChild(line);
         });
 
         appState.components.forEach(comp => {
@@ -153,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pinLabel.textContent = pin.label;
                 group.appendChild(pinLabel);
             });
-            canvas.appendChild(group);
+            transformGroup.appendChild(group);
         });
     }
 
@@ -337,15 +347,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function getMousePosition(evt) {
+        const CTM = canvas.getScreenCTM();
+        return {
+          x: (evt.clientX - CTM.e) / appState.view.scale - appState.view.panX,
+          y: (evt.clientY - CTM.f) / appState.view.scale - appState.view.panY
+        };
+    }
+
     canvas.addEventListener('dragover', (e) => e.preventDefault());
 
     canvas.addEventListener('drop', (e) => {
         e.preventDefault();
         const type = e.dataTransfer.getData('text/plain');
-        const CTM = canvas.getScreenCTM();
-        const dropX = (e.clientX - CTM.e) / CTM.a;
-        const dropY = (e.clientY - CTM.f) / CTM.d;
-        addComponent(type, dropX, dropY);
+        const pos = getMousePosition(e);
+        addComponent(type, pos.x, pos.y);
     });
 
     let dragInfo = null;
@@ -359,7 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             tempLine.setAttribute('class', 'wire temp');
-            canvas.appendChild(tempLine);
+            
+            // This needs to be appended to the transform group, not the canvas itself.
+            // Since the transform group is recreated on each render, we will append it inside the mousemove handler for simplicity
             appState.wiringState.tempLine = tempLine;
             
             e.stopPropagation(); 
@@ -370,11 +388,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (group) {
             const id = parseInt(group.dataset.id);
             selectComponent(id);
+            const pos = getMousePosition(e);
             
             dragInfo = {
                 component: findComponent(id),
-                offsetX: e.clientX - findComponent(id).x,
-                offsetY: e.clientY - findComponent(id).y,
+                offsetX: pos.x - findComponent(id).x,
+                offsetY: pos.y - findComponent(id).y,
             };
         } else {
             selectComponent(null);
@@ -382,31 +401,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     canvas.addEventListener('mousemove', (e) => {
+        const pos = getMousePosition(e);
+        
         if (appState.wiringState.active) {
-            const CTM = canvas.getScreenCTM();
-            const mouseX = (e.clientX - CTM.e) / CTM.a;
-            const mouseY = (e.clientY - CTM.f) / CTM.d;
-
             const sourceComp = findComponent(appState.wiringState.sourcePin.componentId);
             const sourcePinDef = findPin(sourceComp, appState.wiringState.sourcePin.pinId);
 
             appState.wiringState.tempLine.setAttribute('x1', sourceComp.x + sourcePinDef.x);
             appState.wiringState.tempLine.setAttribute('y1', sourceComp.y + sourcePinDef.y);
-            appState.wiringState.tempLine.setAttribute('x2', mouseX);
-            appState.wiringState.tempLine.setAttribute('y2', mouseY);
+            appState.wiringState.tempLine.setAttribute('x2', pos.x);
+            appState.wiringState.tempLine.setAttribute('y2', pos.y);
+           
+            // Ensure tempLine is in the DOM
+            const transformGroup = canvas.querySelector('g');
+            if (transformGroup && !appState.wiringState.tempLine.parentElement) {
+                 transformGroup.appendChild(appState.wiringState.tempLine);
+            }
             return;
         }
 
         if (dragInfo) {
-            dragInfo.component.x = e.clientX - dragInfo.offsetX;
-            dragInfo.component.y = e.clientY - dragInfo.offsetY;
+            dragInfo.component.x = pos.x - dragInfo.offsetX;
+            dragInfo.component.y = pos.y - dragInfo.offsetY;
             render();
         }
     });
 
     canvas.addEventListener('mouseup', (e) => {
         if (appState.wiringState.active) {
-            appState.wiringState.tempLine.remove();
+             if (appState.wiringState.tempLine.parentElement) {
+                appState.wiringState.tempLine.remove();
+            }
 
             if (e.target.classList.contains('pin')) {
                 const targetComponentId = parseInt(e.target.dataset.componentId);
@@ -429,6 +454,37 @@ document.addEventListener('DOMContentLoaded', () => {
         dragInfo = null;
     });
     
+    // Zoom and Pan Implementation
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.textContent = '+';
+    zoomInBtn.addEventListener('click', () => zoom(1.2));
+
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.textContent = '-';
+    zoomOutBtn.addEventListener('click', () => zoom(1 / 1.2));
+
+    const zoomControls = document.createElement('div');
+    zoomControls.id = 'zoom-controls';
+    zoomControls.appendChild(zoomInBtn);
+    zoomControls.appendChild(zoomOutBtn);
+    canvasContainer.appendChild(zoomControls);
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+        zoom(zoomFactor, e.clientX, e.clientY);
+    });
+
+    function zoom(factor, clientX, clientY) {
+        const newScale = appState.view.scale * factor;
+        // Limit zoom
+        if (newScale < 0.2 || newScale > 5) return;
+        
+        appState.view.scale = newScale;
+        render();
+    }
+
+
     document.getElementById('generate-bom-btn').addEventListener('click', () => {
         bomTableBody.innerHTML = '';
         const componentCounts = {};
