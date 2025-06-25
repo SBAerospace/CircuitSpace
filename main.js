@@ -87,12 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const componentsList = document.getElementById('components-list');
     const canvas = document.getElementById('drawing-canvas');
-    const canvasContainer = document.getElementById('canvas-container');
     const inspectorContent = document.getElementById('inspector-content');
     const validationList = document.getElementById('validation-list');
     const bomModal = document.getElementById('bom-modal');
     const bomTableBody = bomModal.querySelector('tbody');
     const closeModalBtn = bomModal.querySelector('.close-button');
+
+    const zoomInBtn = document.getElementById('zoom-in-btn');
+    const zoomOutBtn = document.getElementById('zoom-out-btn');
+    const zoomPercentageDisplay = document.getElementById('zoom-percentage');
 
     function render() {
         canvas.innerHTML = '';
@@ -468,19 +471,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    const zoomInBtn = document.createElement('button');
-    zoomInBtn.textContent = '+';
     zoomInBtn.addEventListener('click', () => zoom(1.2));
-
-    const zoomOutBtn = document.createElement('button');
-    zoomOutBtn.textContent = '-';
     zoomOutBtn.addEventListener('click', () => zoom(1 / 1.2));
-
-    const zoomControls = document.createElement('div');
-    zoomControls.id = 'zoom-controls';
-    zoomControls.appendChild(zoomInBtn);
-    zoomControls.appendChild(zoomOutBtn);
-    canvasContainer.appendChild(zoomControls);
 
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
@@ -488,12 +480,25 @@ document.addEventListener('DOMContentLoaded', () => {
         zoom(zoomFactor, e.clientX, e.clientY);
     });
 
-    function zoom(factor, clientX, clientY) {
+    function zoom(factor) {
         const newScale = appState.view.scale * factor;
-        if (newScale < 0.2 || newScale > 5) return;
         
-        appState.view.scale = newScale;
+        // Apply zoom limits
+        if (newScale < 0.2) {
+            appState.view.scale = 0.2;
+        } else if (newScale > 5) {
+            appState.view.scale = 5;
+        } else {
+            appState.view.scale = newScale;
+        }
+
+        updateZoomDisplay();
         render();
+    }
+
+    function updateZoomDisplay() {
+        const percentage = Math.round(appState.view.scale * 100);
+        zoomPercentageDisplay.textContent = `${percentage}%`;
     }
 
 
@@ -570,6 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return connections;
     };
     
+    // Initial setup calls
+    updateZoomDisplay();
     render();
     runValidation();
 
