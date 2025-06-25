@@ -66,6 +66,17 @@ header button:active {
     transform: scale(0.98);
 }
 
+.header-title {
+    display: flex;
+    align-items: center;
+}
+
+.header-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
 #app-container {
     display: flex;
     flex-grow: 1;
