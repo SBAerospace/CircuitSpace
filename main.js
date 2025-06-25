@@ -365,6 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let dragInfo = null;
+    let panInfo = null;
 
     canvas.addEventListener('mousedown', (e) => {
         if (e.target.classList.contains('pin')) {
@@ -376,8 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             tempLine.setAttribute('class', 'wire temp');
             
-            // This needs to be appended to the transform group, not the canvas itself.
-            // Since the transform group is recreated on each render, we will append it inside the mousemove handler for simplicity
             appState.wiringState.tempLine = tempLine;
             
             e.stopPropagation(); 
@@ -397,6 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         } else {
             selectComponent(null);
+            panInfo = {
+                active: true,
+                startX: e.clientX,
+                startY: e.clientY,
+                initialPanX: appState.view.panX,
+                initialPanY: appState.view.panY
+            };
         }
     });
 
@@ -412,7 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.wiringState.tempLine.setAttribute('x2', pos.x);
             appState.wiringState.tempLine.setAttribute('y2', pos.y);
            
-            // Ensure tempLine is in the DOM
             const transformGroup = canvas.querySelector('g');
             if (transformGroup && !appState.wiringState.tempLine.parentElement) {
                  transformGroup.appendChild(appState.wiringState.tempLine);
@@ -423,6 +428,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dragInfo) {
             dragInfo.component.x = pos.x - dragInfo.offsetX;
             dragInfo.component.y = pos.y - dragInfo.offsetY;
+            render();
+        } else if (panInfo && panInfo.active) {
+            const dx = (e.clientX - panInfo.startX) / appState.view.scale;
+            const dy = (e.clientY - panInfo.startY) / appState.view.scale;
+            appState.view.panX = panInfo.initialPanX + dx;
+            appState.view.panY = panInfo.initialPanY + dy;
             render();
         }
     });
@@ -452,9 +463,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         dragInfo = null;
+        if (panInfo) {
+            panInfo.active = false;
+        }
     });
     
-    // Zoom and Pan Implementation
     const zoomInBtn = document.createElement('button');
     zoomInBtn.textContent = '+';
     zoomInBtn.addEventListener('click', () => zoom(1.2));
@@ -477,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function zoom(factor, clientX, clientY) {
         const newScale = appState.view.scale * factor;
-        // Limit zoom
         if (newScale < 0.2 || newScale > 5) return;
         
         appState.view.scale = newScale;

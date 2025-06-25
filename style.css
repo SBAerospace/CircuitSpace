@@ -143,6 +143,11 @@ header button:active {
     background-position: -10px -10px;
     position: relative;
     overflow: hidden;
+    cursor: grab;
+}
+
+#canvas-container:active {
+    cursor: grabbing;
 }
 
 #drawing-canvas {
