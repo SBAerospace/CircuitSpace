@@ -25,8 +25,19 @@
 
     <div id="app-container">
         <div id="component-library">
-            <h2>Component Library</h2>
-            <div id="components-list">
+            <div>
+                <h2>Component Library</h2>
+                <div class="config-toggle">
+                    <label for="mass-config-toggle">Check Circuit Mass</label>
+                    <label class="switch">
+                        <input type="checkbox" id="mass-config-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="components-list"></div>
+            </div>
+            <div id="total-mass-display" class="hidden">
+                Total Mass: <span>0g</span>
             </div>
         </div>
 

@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "9V Battery",
             width: 50,
             height: 80,
-            properties: { label: "9V Battery", voltage: 9, capacity: 500 },
+            properties: { label: "9V Battery", voltage: 9, capacity: 500, mass: 45 },
             pins: [
                 { id: 'pos', label: '+', x: 10, y: 10, type: 'POWER' },
                 { id: 'neg', label: '-', x: 40, y: 10, type: 'GROUND' },
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "2S LiPo Battery",
             width: 60,
             height: 100,
-            properties: { label: "2S LiPo", voltage: 7.4, capacity: 1000 },
+            properties: { label: "2S LiPo", voltage: 7.4, capacity: 1000, mass: 85 },
             pins: [
                 { id: 'pos', label: '+', x: 15, y: 10, type: 'POWER' },
                 { id: 'neg', label: '-', x: 45, y: 10, type: 'GROUND' },
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Power Switch",
             width: 60,
             height: 40,
-            properties: { label: "Main Switch" },
+            properties: { label: "Main Switch", mass: 5 },
             pins: [
                 { id: 'in', label: 'IN', x: 10, y: 20, type: 'ANY' },
                 { id: 'out', label: 'OUT', x: 50, y: 20, type: 'ANY' },
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Flight Computer",
             width: 120,
             height: 80,
-            properties: { label: "Altimeter", operatingVoltage: 5 },
+            properties: { label: "Altimeter", operatingVoltage: 5, mass: 15 },
             pins: [
                 { id: 'pwr_in', label: 'PWR', x: 10, y: 20, type: 'POWER' },
                 { id: 'gnd', label: 'GND', x: 10, y: 60, type: 'GROUND' },
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Servo Motor",
             width: 80,
             height: 50,
-            properties: { label: "Airbrake Servo", operatingVoltage: 5 },
+            properties: { label: "Airbrake Servo", operatingVoltage: 5, mass: 9 },
             pins: [
                 { id: 'pwr', label: 'PWR', x: 10, y: 25, type: 'POWER' },
                 { id: 'gnd', label: 'GND', x: 40, y: 25, type: 'GROUND' },
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Terminal Block",
             width: 100,
             height: 40,
-            properties: { label: "Power Bus" },
+            properties: { label: "Power Bus", mass: 10 },
             pins: [
                 { id: 't1', label: '1', x: 15, y: 20, type: 'ANY' },
                 { id: 't2', label: '2', x: 40, y: 20, type: 'ANY' },
@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wires: [],
         nextId: 0,
         selectedComponentId: null,
+        massConfigEnabled: false,
         wiringState: {
             active: false,
             sourcePin: null,
@@ -96,6 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomInBtn = document.getElementById('zoom-in-btn');
     const zoomOutBtn = document.getElementById('zoom-out-btn');
     const zoomPercentageDisplay = document.getElementById('zoom-percentage');
+
+    const massConfigToggle = document.getElementById('mass-config-toggle');
+    const totalMassDisplayContainer = document.getElementById('total-mass-display');
+    const totalMassDisplay = totalMassDisplayContainer.querySelector('span');
 
     function render() {
         canvas.innerHTML = '';
@@ -186,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         appState.components.push(newComponent);
         selectComponent(newComponent.id);
+        updateTotalMass();
     }
     
     function removeComponent(componentId) {
@@ -199,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateInspector();
         }
         
+        updateTotalMass();
         runValidation();
         render();
     }
@@ -218,11 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
         for (const key in component.properties) {
+            if (key === 'mass' && !appState.massConfigEnabled) continue;
+
             const value = component.properties[key];
+            const label = key.charAt(0).toUpperCase() + key.slice(1);
             html += `
                 <div class="property-item">
-                    <label for="prop-${key}">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
-                    <input type="text" id="prop-${key}" data-key="${key}" value="${value}">
+                    <label for="prop-${key}">${label}</label>
+                    <input type="${typeof value === 'number' ? 'number' : 'text'}" id="prop-${key}" data-key="${key}" value="${value}">
                 </div>
             `;
         }
@@ -233,11 +243,16 @@ document.addEventListener('DOMContentLoaded', () => {
         inspectorContent.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', (e) => {
                 const key = e.target.dataset.key;
-                const value = e.target.value;
+                const rawValue = e.target.value;
                 const componentToUpdate = findComponent(appState.selectedComponentId);
-                componentToUpdate.properties[key] = isNaN(parseFloat(value)) ? value : parseFloat(value);
+                const isNumber = e.target.type === 'number';
+
+                componentToUpdate.properties[key] = isNumber ? parseFloat(rawValue) : rawValue;
+                
                 if (key === 'label') {
                     render();
+                } else if (key === 'mass') {
+                    updateTotalMass();
                 }
                 runValidation();
             });
@@ -248,6 +263,16 @@ document.addEventListener('DOMContentLoaded', () => {
                  removeComponent(appState.selectedComponentId);
             }
         });
+    }
+
+    function updateTotalMass() {
+        if (appState.massConfigEnabled) {
+            totalMassDisplayContainer.classList.remove('hidden');
+            const totalMass = appState.components.reduce((sum, comp) => sum + (comp.properties.mass || 0), 0);
+            totalMassDisplay.textContent = `${totalMass.toFixed(2)}g`;
+        } else {
+            totalMassDisplayContainer.classList.add('hidden');
+        }
     }
     
     function runValidation() {
@@ -483,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function zoom(factor) {
         const newScale = appState.view.scale * factor;
         
-        // Apply zoom limits
         if (newScale < 0.2) {
             appState.view.scale = 0.2;
         } else if (newScale > 5) {
@@ -501,6 +525,11 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomPercentageDisplay.textContent = `${percentage}%`;
     }
 
+    massConfigToggle.addEventListener('change', (e) => {
+        appState.massConfigEnabled = e.target.checked;
+        updateInspector();
+        updateTotalMass();
+    });
 
     document.getElementById('generate-bom-btn').addEventListener('click', () => {
         bomTableBody.innerHTML = '';
@@ -575,7 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return connections;
     };
     
-    // Initial setup calls
     updateZoomDisplay();
     render();
     runValidation();

@@ -83,24 +83,26 @@ header button:active {
     height: calc(100vh - 65px);
 }
 
-#component-library, #side-panel {
+#component-library {
     width: 260px;
     background-color: var(--bg-dark);
     color: var(--text-light);
     padding: 20px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
     z-index: 5;
-}
-
-#component-library {
     border-right: 1px solid var(--border-color);
 }
 
 #side-panel {
     width: 300px;
+    background-color: var(--bg-dark);
     border-left: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 #component-library h2, #side-panel h2 {
@@ -396,4 +398,68 @@ button#delete-component-btn:hover {
     padding: 0 10px;
     min-width: 40px;
     text-align: center;
+}
+
+.config-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(14px);
+}
+
+#total-mass-display {
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.hidden {
+    display: none;
 }
